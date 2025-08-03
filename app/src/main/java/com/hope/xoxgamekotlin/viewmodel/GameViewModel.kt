@@ -45,14 +45,24 @@ class GameViewModel : ViewModel() {
         }
 
         val antiDiagonalIndexes = buildList {
-            for (i in 1..size) add(i * (size - 1))
-        }
+            for (i in 0 until size) add((i + 1) * (size - 1))
+        }.filter { it < size * size }
 
         checkLine(rowIndexes, onWin)
         checkLine(colIndexes, onWin)
         checkLine(mainDiagonalIndexes, onWin)
         checkLine(antiDiagonalIndexes, onWin)
+
+        val hasWinner = listOf(rowIndexes, colIndexes, mainDiagonalIndexes, antiDiagonalIndexes).any { indexes ->
+            val turns = indexes.map { listOfMovements[it].turn }
+            turns.none { it == null } && turns.distinct().count() == 1
+        }
+
+        if (!hasWinner && listOfMovements.all { it.filled }) {
+            onWin(null)
+        }
     }
+
 
     private fun checkLine(indexes: List<Int>, onWin: (Int?) -> Unit) {
         val turns = indexes.map { listOfMovements[it].turn }
