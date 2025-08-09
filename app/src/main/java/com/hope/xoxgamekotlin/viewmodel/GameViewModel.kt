@@ -1,30 +1,39 @@
 package com.hope.xoxgamekotlin.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hope.xoxgamekotlin.model.Movement
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class GameViewModel : ViewModel() {
-    private val _gameLevel = MutableStateFlow(3)
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
+    private val _gameLevel = MutableStateFlow(savedStateHandle["gameLevel"] ?: 3)
     val gameLevel = _gameLevel.asStateFlow()
 
-    private val _gameTurn = MutableStateFlow(0)
+    private val _gameTurn = MutableStateFlow(savedStateHandle["gameTurn"] ?: 0)
     val gameTurn = _gameTurn.asStateFlow()
-
-    val listOfMovements = mutableStateListOf(*initialMovements.toTypedArray())
 
     private val initialMovements: List<Movement>
         get() = MutableList(gameLevel.value * gameLevel.value) { Movement() }
+
+    val listOfMovements = mutableStateListOf(*initialMovements.toTypedArray())
 
     fun resetGame() {
         listOfMovements.clear()
         _gameTurn.value = 0
         listOfMovements.addAll(initialMovements)
+        persist()
     }
 
     fun checkWin(index: Int, onWin: (Int?) -> Unit) {
@@ -63,7 +72,6 @@ class GameViewModel : ViewModel() {
         }
     }
 
-
     private fun checkLine(indexes: List<Int>, onWin: (Int?) -> Unit) {
         val turns = indexes.map { listOfMovements[it].turn }
         if (turns.none { it == null } && turns.distinct().count() == 1) {
@@ -80,7 +88,6 @@ class GameViewModel : ViewModel() {
         }
     }
 
-
     fun randomMovement(onWin: (Int?) -> Unit) {
         viewModelScope.launch {
             delay(500)
@@ -88,16 +95,12 @@ class GameViewModel : ViewModel() {
                 val index = getFreeIndex()
                 if (index != null) {
                     newMovement(index, turn = 1)
-                    checkWin(index) { winner ->
-                        onWin(winner)
-                    }
+                    checkWin(index) { winner -> onWin(winner) }
                     changeTurn()
                 }
             }
         }
     }
-
-
 
     fun getFreeIndex(): Int? {
         val indexes = listOfMovements.mapIndexedNotNull { index, movement ->
@@ -108,16 +111,20 @@ class GameViewModel : ViewModel() {
 
     fun changeTurn() {
         _gameTurn.update { if (it == 1) 0 else 1 }
+        persist()
     }
 
     fun changeGameLevel(newLevel: Int) {
-        _gameLevel.value = newLevel
+        val clamped = newLevel.coerceIn(3, 25)
+        _gameLevel.value = clamped
+        _gameTurn.value = 0
         listOfMovements.clear()
         listOfMovements.addAll(initialMovements)
+        persist()
+    }
+
+    private fun persist() {
+        savedStateHandle["gameLevel"] = _gameLevel.value
+        savedStateHandle["gameTurn"]  = _gameTurn.value
     }
 }
-
-data class Movement(
-    val filled: Boolean = false,
-    val turn: Int? = null
-)
