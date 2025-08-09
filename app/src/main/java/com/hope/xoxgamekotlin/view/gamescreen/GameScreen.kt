@@ -1,5 +1,6 @@
 package com.hope.xoxgamekotlin.view.gamescreen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
@@ -66,8 +67,10 @@ import com.hope.xoxgamekotlin.viewmodel.GameViewModel
 @Composable
 fun GameScreen(
     modifier: Modifier = Modifier,
-    viewModel: GameViewModel = hiltViewModel()
+    viewModel: GameViewModel = hiltViewModel(),
+    onBack: () -> Unit = {}
 ){
+    BackHandler { onBack() }
     var win by remember {
         mutableStateOf<Int?>(null)
     }
