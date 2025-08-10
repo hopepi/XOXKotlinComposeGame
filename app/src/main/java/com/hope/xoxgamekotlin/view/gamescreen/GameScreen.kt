@@ -75,16 +75,17 @@ fun GameScreen(
         mutableStateOf<Int?>(null)
     }
 
+    val start = Pink200
+    val mid   = Pink300
+    val end   = Pink500
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(
-                        Pink200,
-                        Pink300,
-                        Pink300
-                    )
+                    0f   to start,
+                    0.5f to mid,
+                    1f   to end
                 )
             )
     ) {
@@ -119,7 +120,7 @@ fun GameScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
             Row(
                 modifier = Modifier

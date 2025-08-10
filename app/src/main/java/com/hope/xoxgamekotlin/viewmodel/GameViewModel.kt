@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hope.xoxgamekotlin.model.Movement
+import com.hope.xoxgamekotlin.utils.Difficulty
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -24,6 +25,11 @@ class GameViewModel @Inject constructor(
     private val _gameTurn = MutableStateFlow(savedStateHandle["gameTurn"] ?: 0)
     val gameTurn = _gameTurn.asStateFlow()
 
+    private val _difficulty = MutableStateFlow(Difficulty.MEDIUM)
+    val difficulty = _difficulty.asStateFlow()
+
+
+
     private val initialMovements: List<Movement>
         get() = MutableList(gameLevel.value * gameLevel.value) { Movement() }
 
@@ -34,6 +40,10 @@ class GameViewModel @Inject constructor(
         _gameTurn.value = 0
         listOfMovements.addAll(initialMovements)
         persist()
+    }
+
+    fun setDifficulty(d: Difficulty) {
+        _difficulty.value = d
     }
 
     fun checkWin(index: Int, onWin: (Int?) -> Unit) {
